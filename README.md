@@ -93,8 +93,16 @@ cp .env.example .env && chmod 600 .env
 ./scripts/docker-deploy.sh        # same as: docker compose up -d --build
 ```
 
-Then install the Nginx site from `deploy/nginx/wingobingo-proxy.conf`, get the
-certificate, and apply the firewall rules in `docs/FIREWALL.md`.
+Then install the Nginx site (HTTP only; certbot adds https) and apply the
+firewall rules in `docs/FIREWALL.md`:
+
+```bash
+sudo cp deploy/nginx/wingobingo-proxy.conf /etc/nginx/sites-available/wingobingo-proxy
+sudo ln -s /etc/nginx/sites-available/wingobingo-proxy /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d payment.api.wingobingo.tv --redirect
+curl https://payment.api.wingobingo.tv/healthz    # {"status":"ok"}
+```
 
 ## Configuration
 
@@ -217,7 +225,7 @@ is in [`docs/FIREWALL.md`](docs/FIREWALL.md).
 |---|---|
 | Container restarts at once | `docker compose logs proxy`: the config problems are listed. |
 | Player API gets 401 `unauthorized` | proxy log `internal auth failed` with `reason`. `expired_timestamp` → clock (NTP); `bad_signature` → secret, or something rewrote the path (Nginx must not), or the body changed. |
-| Player API gets 403 | its IP is not in `INTERNAL_ALLOWED_IPS` / Nginx `allow`. With Nginx in front, `TRUSTED_PROXIES` must cover the compose network or every request looks like it comes from the gateway. |
+| Player API gets 403 | its IP is not in `INTERNAL_ALLOWED_IPS`. With Nginx in front, `TRUSTED_PROXIES` must cover the compose network or every request looks like it comes from the gateway. |
 | 503 `circuit_open` | provider failing; `wbproxy_circuit_open`, `wbproxy_upstream_failures_total`. |
 | 502 `upstream_blocked_destination` | provider host resolved to a blocked address, or not in the allowlist. |
 | Callbacks stuck in `retry_pending` | `GET /v1/admin/callbacks?status=retry_pending`, `lastError`. The Player API answers 401 when `PAYMENT_PROXY_CALLBACK_KEYS` does not match. |

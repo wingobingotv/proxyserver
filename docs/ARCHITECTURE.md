@@ -98,7 +98,7 @@ the encrypted backend response (replayed to duplicates).
 
 | Boundary | Control |
 |---|---|
-| Internet → proxy | Nginx TLS, route allowlist, per-route IP `allow`, body size |
+| Internet → proxy | Nginx TLS (certbot), route allowlist, `/v1/admin` and `/metrics` closed, body size |
 | Player API → proxy | HMAC v1 + nonce + timestamp + scope + `INTERNAL_ALLOWED_IPS` |
 | provider → proxy | adapter signature check + optional IP allowlist + rate limits |
 | proxy → provider | fixed base URL, host allowlist, SSRF guard, TLS verification |

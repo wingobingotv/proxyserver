@@ -14,7 +14,7 @@ Names used below:
 
 | Port | Source | Purpose |
 |---|---|---|
-| 443/tcp | any | provider callbacks (`/callback/…`); Nginx limits `/v1/…` to the IPs below |
+| 443/tcp | any | provider callbacks (`/callback/…`) and the Player API relay (`/v1/providers/…`, limited by the proxy to `INTERNAL_ALLOWED_IPS`) |
 | 80/tcp | any | ACME challenge and redirect to https only |
 | 22/tcp | admin IPs / VPN only | SSH |
 | everything else | — | deny |
@@ -54,4 +54,3 @@ compose file binds to 127.0.0.1 only.
 | ParsCoin merchant panel (callback URL) | `https://<proxy-domain>/callback/<slug>` | the old `…/webhooks/ir-card` URL |
 | Player API firewall / WAF | allow `WINGOBINGO_PROXY_PUBLIC_IP` to `POST /webhooks/ir-card` | — |
 | Proxy `.env` `INTERNAL_ALLOWED_IPS` | `PLAYER_API_IP` (+ `ADMIN_API_IP`) | — |
-| Proxy Nginx `allow` | same as above, per location | — |
