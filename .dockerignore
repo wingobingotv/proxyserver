@@ -1,0 +1,15 @@
+node_modules
+dist
+coverage
+data
+.git
+.env
+.env.*
+*.db
+*.db-wal
+*.db-shm
+*.log
+test
+docs
+deploy
+README.md

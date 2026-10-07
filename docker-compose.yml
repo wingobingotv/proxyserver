@@ -1,0 +1,49 @@
+name: wingobingo-proxy
+
+services:
+  proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: wingobingo-proxy:latest
+    container_name: wingobingo-proxy
+    restart: unless-stopped
+    init: true
+    env_file: .env
+    environment:
+      # Container-internal locations; the rest comes from .env.
+      HOST: 0.0.0.0
+      DATABASE_PATH: /data/proxy.db
+    ports:
+      # Only Nginx on this host talks to the proxy. Never publish it on 0.0.0.0.
+      - "${PROXY_BIND:-127.0.0.1}:${PROXY_HOST_PORT:?set PROXY_HOST_PORT in .env}:${PORT:?set PORT in .env}"
+    volumes:
+      - proxy-data:/data
+    networks:
+      - proxy
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "10"
+
+networks:
+  proxy:
+    driver: bridge
+    ipam:
+      config:
+        # Fixed so TRUSTED_PROXIES (Nginx reaching the container through this
+        # network's gateway) stays valid across rebuilds.
+        - subnet: ${PROXY_DOCKER_SUBNET:?set PROXY_DOCKER_SUBNET in .env}
+
+volumes:
+  proxy-data:
