@@ -16,7 +16,8 @@ Names used below:
 |---|---|---|
 | 443/tcp | any | provider callbacks (`/callback/…`) and the Player API relay (`/v1/providers/…`, limited by the proxy to `INTERNAL_ALLOWED_IPS`) |
 | 80/tcp | any | ACME challenge and redirect to https only |
-| 22/tcp | admin IPs / VPN only | SSH |
+| SSH port(s) in use | any, rate-limited + fail2ban (narrow to admin IPs / VPN if you can) | SSH |
+| 2468/tcp | any | extra port requested for this host (`EXTRA_TCP_PORTS`) |
 | everything else | — | deny |
 
 The container port (`PROXY_HOST_PORT`) is bound to 127.0.0.1 and must never be
@@ -24,14 +25,17 @@ opened. If ParsCoin publishes callback IPs, you can restrict 443 to
 `PARSCOIN_CALLBACK_IPS`, `PLAYER_API_IP`, `ADMIN_API_IP` and `MONITORING_IP`.
 Set `PARSCOIN_CALLBACK_ALLOWED_IPS` as well, since the proxy checks it too.
 
+`scripts/harden-server.sh` applies all of this (plus fail2ban, automatic
+security updates, NTP, sysctl and SSH hardening):
+
 ```bash
-ufw default deny incoming
-ufw default allow outgoing     # or the egress list below
-ufw allow from <admin-ip> to any port 22 proto tcp
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw enable
+sudo ./scripts/harden-server.sh                   # opens the SSH port(s) in use, 80, 443 and 2468/tcp
+sudo EXTRA_TCP_PORTS="2468 9100" ./scripts/harden-server.sh   # different extra ports
+sudo ./scripts/harden-server.sh --ssh-keys-only   # also disable SSH passwords (only if keys exist)
 ```
+
+It detects the port sshd really listens on and always keeps it open, and it
+never removes existing ufw rules.
 
 Docker publishes ports through iptables and bypasses ufw. That is why the
 compose file binds to 127.0.0.1 only.

@@ -93,8 +93,13 @@ cp .env.example .env && chmod 600 .env
 ./scripts/docker-deploy.sh        # same as: docker compose up -d --build
 ```
 
-Then install the Nginx site (HTTP only; certbot adds https) and apply the
-firewall rules in `docs/FIREWALL.md`:
+Harden the host (firewall, fail2ban, updates, NTP, SSH; see `docs/FIREWALL.md`):
+
+```bash
+sudo ./scripts/harden-server.sh
+```
+
+Then install the Nginx site (HTTP only; certbot adds https):
 
 ```bash
 sudo cp deploy/nginx/wingobingo-proxy.conf /etc/nginx/sites-available/wingobingo-proxy
